@@ -2,6 +2,8 @@
 nodeviz – A fast and small Bitcoin node vizualition tool
 =============================================================
 
+<img src="https://github.com/victorsintnicolaas/bitcoin-node-visualizer/blob/master/Example.jpg?raw=true" width="550">
+
 ##### Dependencies:
 	curl	
 	leveldb
@@ -12,7 +14,7 @@ nodeviz – A fast and small Bitcoin node vizualition tool
 	catch test framework (header-only included)
 	PicoSHA2 (header-only included)
 	
-##### Compilation Ubuntu 16.04:
+##### Building steps:
 	clone this repository
 	clone leveldb into nodeviz/lib 
 	make all 

@@ -56,8 +56,7 @@ void DB::view() {
     leveldb::Iterator *it = ipdb->NewIterator(leveldb::ReadOptions());
     for (it->SeekToFirst(); it->Valid(); it->Next()) {
         IpData ipd(it->value());  // Initialize ipd from slice
-        cout << ipd.toString() << endl;
-        if (i++ > 1000) throw networkError("me", "heh");
+        cout << ++i << ":\t" << ipd.toString() << endl;
     }
 }
 

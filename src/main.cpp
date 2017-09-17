@@ -6,13 +6,14 @@
 #include "msg.hpp"
 #include "socket.hpp"
 
-// call the receive function
-void recvT(Socket &sock, DB *ipdb) { sock.recv(ipdb); }
+// Optional asynchronous function
+void recvT(Socket &sock) { vector<string> iplist = sock.recvIp(); }
 
 // Constructing and sending all messages in seperate threads
-void makeAndSendMessages(Socket &sock, DB *ipdb) {
+vector<string> makeAndSendMessages(Socket &sock) {
     // initialize msg object
     MsgValues msg(sock.ip);
+    vector<string> iplist;
 
     // Make version msg
     msg.makeVersionMsg();
@@ -39,16 +40,17 @@ void makeAndSendMessages(Socket &sock, DB *ipdb) {
     stringToIntBuffer(&(msg.getaddr), &ibuffers);
     copy(begin(ibuffers), end(ibuffers), buffers4);
 
-    // Read and send over sockets
-    boost::thread recvThread(recvT, sock, ipdb);  // TODO std::thread / async ?
+    sock.send(buffers1, sizeof(buffers1) / sizeof(buffers1[0]), 2);
+    // If Verack message is received, send other messages
+    if (sock.recvVerack() == 1) {
+        // boost::thread recvThread(recvT, sock, ipdb);
+        sock.send(buffers2, (sizeof(buffers2) / sizeof(buffers2[0])) - 1, 0);
+        sock.send(buffers3, (sizeof(buffers3) / sizeof(buffers3[0])) - 1, 0);
+        sock.send(buffers4, (sizeof(buffers4) / sizeof(buffers4[0])) - 1, 0);
+        iplist = sock.recvIp();
+    }
 
-    sock.send(buffers1, sizeof(buffers1) / sizeof(buffers1[0]));
-    usleep(500000);
-    sock.send(buffers2, sizeof(buffers2) / sizeof(buffers2[0]));
-    sock.send(buffers3, sizeof(buffers3) / sizeof(buffers3[0]));
-    sock.send(buffers4, sizeof(buffers4) / sizeof(buffers4[0]));
-    usleep(500000);
-    sock.send(buffers4, sizeof(buffers4) / sizeof(buffers4[0]));
+    return iplist;
 }
 
 int main(int argc, char *argv[]) {
@@ -99,21 +101,30 @@ int main(int argc, char *argv[]) {
         ipdb.setSkip(skip);
     }
 
-    // In each iteration, try to get iplists of current iplist
-    // TODO update vector and then add to the database in a batch
+    // In each iteration, try to get iplists from all addresses
     while (true) {
         vector<IpData> ipdVec = ipdb.readToVec();
         for (IpData &ipd : ipdVec) {
-            usleep(1000000);  // Slow connections to ensure checking
             cout << "___________________initiating ip: " << ipd.getIp() << endl;
             try {
                 Socket sock(ipd.getIp().c_str());
                 sock.setup();
-                makeAndSendMessages(sock, &ipdb);
-                // TODO The DB object has to be send as a reference because the
-                // socket thread can't return values while it keeps running. In
-                // order to prevent delays, a pointer to the database ensures
-                // that simultaneous asynchronous receiving can conitinue.
+                vector<string> iplist = makeAndSendMessages(sock);
+
+                // put captured ip addresses into database
+                for (string ip : iplist) {
+                    string input = ipdb.get(ip);
+                    IpData ipd(ip, input);
+                    ipdb.put(ipd);
+                }
+
+                // Save in database that reading is finished
+                cout << "____________Finished_reading: " << ipd.getIp() << endl;
+                ipd.setStatus("finished");
+                ipdb.put(ipd);
+
+                // Close socket
+                sock.closeSocket();
             } catch (networkError &e) {
                 ipd.setStatus(e.getMsg());
                 ipdb.put(ipd);

@@ -46,7 +46,7 @@ struct MsgValues {
     string getaddr = "f9beb4d9676574616464720000000000000000005df6e0e2";
 };
 
-void parseHexBuffer(string, DB *, string);
+vector<string> parseHexBuffer(string, string);
 std::pair<vector<string>, vector<string>> getAddrsFromString(string &);
 void stringToIntBuffer(string *msg, vector<int> *vec);
 

@@ -26,9 +26,10 @@ class Socket {
         if (sockfd < 0) throw networkError(ip, "ErrorSock");
     }
     void setup();
-    void send(int buffers[], int len);
-    void recv(DB *ipdb);
-    void closeSocket(DB *ipdb);
+    void send(int buffers[], int len, int cut);
+    int recvVerack();
+    vector<string> recvIp();
+    void closeSocket();
 
     // basic variables to set up socket
     const string ip;

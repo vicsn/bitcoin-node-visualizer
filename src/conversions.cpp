@@ -49,8 +49,8 @@ void conversions::hexToIpv4(string addrAsHexStr, string *ip) {
 void conversions::hexToIpv6(string addrAsHexStr, string *ip) {
     ip->clear();
     for (unsigned int i = 0; i < addrAsHexStr.size(); i += 4) {
-        if (addrAsHexStr.substr(i, 4) != "0000")
-            *ip += addrAsHexStr.substr(i, 4);
+        // if (addrAsHexStr.substr(i, 4) != "0000") // short ipv6 notation
+        *ip += addrAsHexStr.substr(i, 4);
         if (i != 28 && (*ip)[ip->size() - 2] != ':') ip->push_back(':');
     }
 }

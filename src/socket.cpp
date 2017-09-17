@@ -58,10 +58,11 @@ void Socket::setup() {
     freeaddrinfo(res);
 }
 
-void Socket::send(int buffers[], int len) {
+void Socket::send(int buffers[], int len, int cut) {
     int i;
 
     cout << endl << "sending through socket: ";
+
     for (i = 0; i != len; ++i) {
         if (::send(sockfd, (char *)&buffers[i], sizeof(buffers[i]), 0) >= 0) {
             printf("%d ", i);
@@ -71,40 +72,51 @@ void Socket::send(int buffers[], int len) {
     }
 
     // For the final send to work, the buffer length has to be shorter
-    if (::send(sockfd, (char *)&buffers[i], sizeof(buffers[i]) - 2, 0) >= 0) {
+    if (::send(sockfd, (char *)&buffers[i], sizeof(buffers[i]) - cut, 0) >= 0) {
         printf("%d\n", i);
     } else {
         throw networkError(ip, "ErrorSend");
     }
 }
 
-void Socket::recv(DB *ipdb) {
+int Socket::recvVerack() {
+    char buf[500];
+    if (::recv(sockfd, (char *)&buf, sizeof(buf), 0) > 0) {
+        string bufferAsStr(buf, 500);
+        if (!bufferAsStr.empty()) {
+            bufferAsStr = picosha2::bytes_to_hex_string(begin(bufferAsStr),
+                                                        end(bufferAsStr));
+            conversions::removeChars(&bufferAsStr, "ffffff");
+            if (bufferAsStr.find("76657261") != string::npos) return 1;
+        }
+    }
+    return 0;
+}
+
+vector<string> Socket::recvIp() {
+    vector<string> iplist;
     start = time(0);
     auto bufPtr = std::make_unique<char[]>(10000);
+    // char buf[10000];
+    // (char *)&buf
 
     // Read socket for 60 seconds, 10 iterations at a time
-    while (time(0) - start < 60) {
-        for (int j = 0; j < 1000; j++) {
-            if (::recv(sockfd, bufPtr.get(), sizeof bufPtr, 0) > 0) {
-                string bufferAsStr(bufPtr.get());
+    while (time(0) - start < 30) {
+        for (int j = 0; j < 10; j++) {
+            if (::recv(sockfd, bufPtr.get(), 10000, 0) > 0) {
+                string bufferAsStr(bufPtr.get(), 10000);
                 hexAsStr += bufferAsStr;
             };
         }
 
         // Extract and save ip addresses from read material
-        if (!hexAsStr.empty()) parseHexBuffer(hexAsStr, ipdb, ip);
+        if (!hexAsStr.empty()) {
+            iplist = parseHexBuffer(hexAsStr, ip);
+            if (iplist.size() > 1) return iplist;
+        }
         hexAsStr.clear();
     }
-
-    closeSocket(ipdb);
+    return iplist;
 }
 
-void Socket::closeSocket(DB *ipdb) {
-    // Save in database that reading is finished
-    cout << "________________________________Finished_reading: " << ip << endl;
-    string input = ipdb->get(ip);
-    IpData ipd(ip, input);
-    ipd.setStatus("finished");
-    ipdb->put(ipd);
-    close(sockfd);
-}
+void Socket::closeSocket() { close(sockfd); }

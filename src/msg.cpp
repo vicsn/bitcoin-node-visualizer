@@ -35,12 +35,15 @@ void MsgValues::makeVersionMsg() {
 }
 
 // Convert bytes to hexstring, parse as
-void parseHexBuffer(string hexAsStr, DB *ipdb, string srcAddr) {
+vector<string> parseHexBuffer(string hexAsStr, string srcAddr) {
     hexAsStr = picosha2::bytes_to_hex_string(begin(hexAsStr), end(hexAsStr));
 
+    // Remove "ffffff" padding of received messages
+    conversions::removeChars(&hexAsStr, "ffffff");
+
     // Create regex pattern to find and retrieve ip addresses
+    cout << srcAddr << ": ";
     pair<vector<string>, vector<string>> addrs = getAddrsFromString(hexAsStr);
-    cout << srcAddr << ": " << hexAsStr << endl;
 
     vector<string> iplist;
     string ip;
@@ -58,39 +61,33 @@ void parseHexBuffer(string hexAsStr, DB *ipdb, string srcAddr) {
         iplist.push_back(ip);
         cout << "addr: " << addr << " : " << ip << endl;
     }
-
-    for (string ip : iplist) {
-        string input = ipdb->get(ip);
-        IpData ipd(ip, input);
-        ipdb->put(ipd);
-    }
+    return iplist;
 }
 
 // Use regular expressions to find ipv4 and ipv6 pattern
 pair<vector<string>, vector<string>> getAddrsFromString(string &str) {
-    // First we remove extraneous 'f' chars from the stream
-    size_t pos;  // size_t because pos will be compared to string::npos
-    const std::regex r4("ffff{1}[A-Za-z0-9]{8}(208d){1}");
-    const std::regex r6(
-        "2{1}[a06]{1}[A-Za-z0-9]{1}[0-9]{1}[A-za-z0-9]{28}(208d){1}");
-
-    // regex according to the last results
-
-    // Remove "ffffff" padding of received messages
-    conversions::removeChars(&str, "ffffff");
-
-    // find and hold ipv4 addresses
     vector<string> ipv4addrs;
-    for (std::sregex_iterator it(begin(str), end(str), r4), end_it;
-         it != end_it; ++it) {
-        ipv4addrs.push_back((it->str()).substr(4, 8));
-    }
-
-    // find and hold ipv6 addresses
     vector<string> ipv6addrs;
-    for (std::sregex_iterator it(begin(str), end(str), r6), end_it;
-         it != end_it; ++it) {
-        ipv6addrs.push_back((it->str()).substr(0, 32));
+
+    cout << str << endl;
+    // size_t because pos will be compared to string::npos
+    if (str.find("616464720000") != string::npos) {
+        cout << "addrs: " << str << endl;
+        const std::regex r4("ffff{1}[A-Za-z0-9]{8}(208d){1}");
+        const std::regex r6(
+            "2{1}[a06]{1}[A-Za-z0-9]{1}[0-9]{1}[A-za-z0-9]{28}(208d){1}");
+
+        // find and hold ipv4 addresses
+        for (std::sregex_iterator it(begin(str), end(str), r4), end_it;
+             it != end_it; ++it) {
+            ipv4addrs.push_back((it->str()).substr(4, 8));
+        }
+
+        // find and hold ipv6 addresses
+        for (std::sregex_iterator it(begin(str), end(str), r6), end_it;
+             it != end_it; ++it) {
+            ipv6addrs.push_back((it->str()).substr(0, 32));
+        }
     }
 
     return std::make_pair(ipv4addrs, ipv6addrs);

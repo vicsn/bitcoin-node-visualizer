@@ -42,7 +42,6 @@ vector<string> parseHexBuffer(string hexAsStr, string srcAddr) {
     conversions::removeChars(&hexAsStr, "ffffff");
 
     // Create regex pattern to find and retrieve ip addresses
-    cout << srcAddr << ": ";
     pair<vector<string>, vector<string>> addrs = getAddrsFromString(hexAsStr);
 
     vector<string> iplist;
@@ -69,7 +68,6 @@ pair<vector<string>, vector<string>> getAddrsFromString(string &str) {
     vector<string> ipv4addrs;
     vector<string> ipv6addrs;
 
-    cout << str << endl;
     // size_t because pos will be compared to string::npos
     if (str.find("616464720000") != string::npos) {
         cout << "addrs: " << str << endl;

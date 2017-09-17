@@ -18,7 +18,7 @@ void Socket::setup() {
     if (connect(sockfd, res->ai_addr, res->ai_addrlen) < 0) {
         if (errno == EINPROGRESS) {
             do {
-                tv.tv_sec = 5;
+                tv.tv_sec = 2;
                 tv.tv_usec = 0;
                 FD_ZERO(&myset);
                 FD_SET(sockfd, &myset);
@@ -97,8 +97,6 @@ vector<string> Socket::recvIp() {
     vector<string> iplist;
     start = time(0);
     auto bufPtr = std::make_unique<char[]>(10000);
-    // char buf[10000];
-    // (char *)&buf
 
     // Read socket for 60 seconds, 10 iterations at a time
     while (time(0) - start < 30) {

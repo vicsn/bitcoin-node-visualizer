@@ -52,12 +52,16 @@ vector<IpData> DB::readToVec() {
 
 // View status of all ip addresses
 void DB::view() {
-    int i = 0;
+    int i = 0, j = 0;
     leveldb::Iterator *it = ipdb->NewIterator(leveldb::ReadOptions());
     for (it->SeekToFirst(); it->Valid(); it->Next()) {
         IpData ipd(it->value());  // Initialize ipd from slice
-        cout << ++i << ":\t" << ipd.toString() << endl;
+        if (ipd.getStatus() == "finished") {
+            cout << ++i << ":\t" << ipd.toString() << endl;
+        }
+        ++j;
     }
+    cout << "total captured: " << j << endl;
 }
 
 // Collect and print the coordinates of all ip addresses
@@ -65,8 +69,9 @@ void DB::collect() {
     string lat, lon, target, res;
     leveldb::Iterator *it = ipdb->NewIterator(leveldb::ReadOptions());
     for (it->SeekToFirst(); it->Valid(); it->Next()) {
-        IpData ipd(it->value());   // Initialize ipd from slice
-        if (lon == "000000000") {  // If not yet found
+        IpData ipd(it->value());
+        // If lon yet found and ip is finished
+        if (ipd.getLon() == "000000000" && ipd.getStatus() == "finished") {
             // Retrieve info about this ip from website api
             target = "http://freegeoip.net/json/" + ipd.getIp();
             res = simple_curl(target.c_str());

@@ -7,20 +7,24 @@ string IpData::serializeAsStr() {
     string f1(39 - ip.size(), '*');
     string f2(9 - lon.size(), '0');
     string f3(8 - lat.size(), '0');
-    string f4(10 - status.size(), '.');
+    string f4(10 - status.size(), '*');
+    string f5(32 - version.size(), '*');
 
-    return ip + f1 + lon + f2 + lat + f3 + status + f4;
+    return ip + f1 + lon + f2 + lat + f3 + status + f4 + version + f5;
 }
 
 void IpData::deserializeAsStr(string inBuff) {
-    if (inBuff.size() < 66) {
-        inBuff.append(66 - inBuff.size(), ' ');
+    if (inBuff.size() < 98) {
+        inBuff.append(98 - inBuff.size(), ' ');
     }
     ip = inBuff.substr(0, 39);
     lon = inBuff.substr(39, 9);
     lat = inBuff.substr(48, 8);
     status = inBuff.substr(56, 10);
+    version = inBuff.substr(66, 32);
 
-    conversions::removeChars(&ip, "*");      // Remove padding from ip
-    conversions::removeChars(&status, ".");  // Remove padding from status
+    // Remove padding
+    conversions::removeChars(&ip, "*");
+    conversions::removeChars(&status, "*");
+    conversions::removeChars(&version, "*");
 }

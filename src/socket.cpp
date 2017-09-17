@@ -58,11 +58,11 @@ void Socket::setup() {
     freeaddrinfo(res);
 }
 
+// Send message in batches of bytes
 void Socket::send(int buffers[], int len, int cut) {
     int i;
 
     cout << endl << "sending through socket: ";
-
     for (i = 0; i != len; ++i) {
         if (::send(sockfd, (char *)&buffers[i], sizeof(buffers[i]), 0) >= 0) {
             printf("%d ", i);
@@ -71,7 +71,7 @@ void Socket::send(int buffers[], int len, int cut) {
         }
     }
 
-    // For the final send to work, the buffer length has to be shorter
+    // For the final send to work,the buffer length has to be shorter
     if (::send(sockfd, (char *)&buffers[i], sizeof(buffers[i]) - cut, 0) >= 0) {
         printf("%d\n", i);
     } else {
@@ -79,7 +79,8 @@ void Socket::send(int buffers[], int len, int cut) {
     }
 }
 
-int Socket::recvVerack() {
+string Socket::recvVerack() {
+    string version;
     char buf[500];
     if (::recv(sockfd, (char *)&buf, sizeof(buf), 0) > 0) {
         string bufferAsStr(buf, 500);
@@ -87,10 +88,27 @@ int Socket::recvVerack() {
             bufferAsStr = picosha2::bytes_to_hex_string(begin(bufferAsStr),
                                                         end(bufferAsStr));
             conversions::removeChars(&bufferAsStr, "ffffff");
-            if (bufferAsStr.find("76657261") != string::npos) return 1;
+            if (bufferAsStr.find("76657261") != string::npos) {
+                cout << "Verack received" << endl;
+
+                std::smatch m;
+                const std::regex r(
+                    "(ffff){1}[a-z0-9]{12}0{1}[a-z0-9]{1}"
+                    "000000000000000000000000000000000000000000000000{1}");
+                std::regex_search(bufferAsStr, m, r);
+                size_t pos = bufferAsStr.find(
+                    "00000000000000000000000000000000000000000000000"
+                    "0");
+                if (m.position(0) < bufferAsStr.size()) {
+                    version = bufferAsStr.substr(m.position(0) + 86, 32);
+                    version = conversions::hexToAscii(version);
+                }
+
+                cout << "version: " << version << endl;
+            }
         }
     }
-    return 0;
+    return version;
 }
 
 vector<string> Socket::recvIp() {

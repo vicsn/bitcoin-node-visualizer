@@ -10,7 +10,7 @@
 void recvT(Socket &sock) { vector<string> iplist = sock.recvIp(); }
 
 // Constructing and sending all messages in seperate threads
-vector<string> makeAndSendMessages(Socket &sock) {
+pair<string, vector<string>> makeAndSendMessages(Socket &sock) {
     // initialize msg object
     MsgValues msg(sock.ip);
     vector<string> iplist;
@@ -42,7 +42,8 @@ vector<string> makeAndSendMessages(Socket &sock) {
 
     sock.send(buffers1, sizeof(buffers1) / sizeof(buffers1[0]), 2);
     // If Verack message is received, send other messages
-    if (sock.recvVerack() == 1) {
+    string version = sock.recvVerack();
+    if (!version.empty()) {
         // boost::thread recvThread(recvT, sock, ipdb);
         sock.send(buffers2, (sizeof(buffers2) / sizeof(buffers2[0])) - 1, 0);
         sock.send(buffers3, (sizeof(buffers3) / sizeof(buffers3[0])) - 1, 0);
@@ -50,7 +51,7 @@ vector<string> makeAndSendMessages(Socket &sock) {
         iplist = sock.recvIp();
     }
 
-    return iplist;
+    return std::make_pair(version, iplist);
 }
 
 int main(int argc, char *argv[]) {
@@ -109,8 +110,8 @@ int main(int argc, char *argv[]) {
             try {
                 Socket sock(ipd.getIp().c_str());
                 sock.setup();
-                vector<string> iplist = makeAndSendMessages(sock);
-
+                pair<string, vector<string>> data = makeAndSendMessages(sock);
+                vector<string> iplist = data.second;
                 // put captured ip addresses into database
                 for (string ip : iplist) {
                     string input = ipdb.get(ip);
@@ -120,6 +121,7 @@ int main(int argc, char *argv[]) {
 
                 // Save in database that reading is finished
                 cout << "____________Finished_reading: " << ipd.getIp() << endl;
+                ipd.setVersion(data.first);
                 ipd.setStatus("finished");
                 ipdb.put(ipd);
 

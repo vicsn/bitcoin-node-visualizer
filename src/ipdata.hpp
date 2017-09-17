@@ -6,9 +6,9 @@
 
 class IpData {
    public:
-    IpData(string ip, string lon, string lat, string stat)
-        : ip(ip), lon(lon), lat(lat), status(stat) {}
-    IpData(leveldb::Slice s) : ip(), lon(), lat(), status() {
+    // IpData(string ip, string lon, string lat, string stat, string version)
+    //     : ip(ip), lon(lon), lat(lat), status(stat), version(version) {}
+    IpData(leveldb::Slice s) : ip(), lon(), lat(), status(), version() {
         deserializeAsStr(s.ToString());
     }
     IpData(string ip, string input) : ip(ip), status("fresh") {
@@ -21,17 +21,21 @@ class IpData {
         toStr += ip + "  \tlon: ";
         toStr += lon + "\tlat: ";
         toStr += lat + "\tstatus: ";
-        toStr += status;
+        toStr += status + "\tversion: ";
+        toStr += version;
         return toStr;
     }
+
     string getIp() { return ip; }
     string getLon() { return lat; }
     string getLat() { return lon; }
     string getStatus() { return status; }
-    size_t getSize() { return (ip + lon + lat + status).size(); }
+    string getVersion() { return status; }
+    size_t getSize() { return (ip + lon + lat + status + version).size(); }
     void setLon(const string &lon) { this->lon = lon; }
     void setLat(const string &lat) { this->lat = lat; }
     void setStatus(const string &status) { this->status = status; }
+    void setVersion(const string &version) { this->version = version; }
 
     // Declarations
     string serializeAsStr();
@@ -42,6 +46,7 @@ class IpData {
     string lon;
     string lat;
     string status;
+    string version;
 };
 
 #endif

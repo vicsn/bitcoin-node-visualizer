@@ -27,7 +27,7 @@ class Socket {
     }
     void setup();
     void send(int buffers[], int len, int cut);
-    int recvVerack();
+    string recvVerack();
     vector<string> recvIp();
     void closeSocket();
 

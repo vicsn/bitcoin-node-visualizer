@@ -55,6 +55,17 @@ void conversions::hexToIpv6(string addrAsHexStr, string *ip) {
     }
 }
 
+// Convert hex string to ascii representation
+string conversions::hexToAscii(string hex) {
+    string newString;
+    for (int i = 0; i < hex.length(); i += 2) {
+        string byte = hex.substr(i, 2);
+        char chr = (char)stoi(byte.c_str(), NULL, 16);
+        newString.push_back(chr);
+    }
+    return newString;
+}
+
 void conversions::removeChars(string *str, string element) {
     size_t pos;
     do {

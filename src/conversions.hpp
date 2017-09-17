@@ -42,6 +42,7 @@ namespace conversions {
 void removeChars(string *str, string element);
 string decToHex(unsigned int dec);
 string reverseHex(string);
+string hexToAscii(string);
 string ipToHex(string ip);
 void hexToIpv4(string, string *ip);
 void hexToIpv6(string, string *ip);

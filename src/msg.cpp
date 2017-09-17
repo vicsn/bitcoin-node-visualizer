@@ -71,9 +71,10 @@ pair<vector<string>, vector<string>> getAddrsFromString(string &str) {
     // size_t because pos will be compared to string::npos
     if (str.find("616464720000") != string::npos) {
         cout << "addrs: " << str << endl;
-        const std::regex r4("ffff{1}[A-Za-z0-9]{8}(208d){1}");
+        // Note: only lowercase
+        const std::regex r4("ffff{1}[a-z0-9]{8}(208d){1}");
         const std::regex r6(
-            "2{1}[a06]{1}[A-Za-z0-9]{1}[0-9]{1}[A-za-z0-9]{28}(208d){1}");
+            "2{1}[a06]{1}[a-z0-9]{1}[0-9]{1}[a-z0-9]{28}(208d){1}");
 
         // find and hold ipv4 addresses
         for (std::sregex_iterator it(begin(str), end(str), r4), end_it;

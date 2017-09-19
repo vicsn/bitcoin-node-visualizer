@@ -33,7 +33,7 @@ void DB::refresh() {
 }
 
 // Put fresh ip addresses in a vector
-vector<IpData> DB::readToVec() {
+vector<IpData> DB::readToVec(int readlimit) {
     vector<IpData> vec;
     leveldb::Iterator *it = ipdb->NewIterator(leveldb::ReadOptions());
     for (it->SeekToFirst(); it->Valid(); it->Next()) {
@@ -44,7 +44,11 @@ vector<IpData> DB::readToVec() {
         } else {
             if (ipd.getStatus() == "fresh") {
                 vec.push_back(ipd);
+                --readlimit;
             }
+        }
+        if (readlimit == 0) {
+            return vec;
         }
     }
     return vec;

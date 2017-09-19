@@ -1,16 +1,18 @@
 #include <boost/chrono/include.hpp>
 #include <boost/thread/thread.hpp>
 #include <chrono>
+#include <future>
+#include <thread>
 
 #include "cxxopts.hpp"
 #include "msg.hpp"
+#include "returnData.hpp"
 #include "socket.hpp"
 
-// Optional asynchronous function
-void recvT(Socket &sock) { vector<string> iplist = sock.recvIp(); }
+using std::promise;
 
 // Constructing and sending all messages in seperate threads
-pair<string, vector<string>> makeAndSendMessages(Socket &sock) {
+ReturnData makeAndSendMessages(Socket &sock) {
     // initialize msg object
     MsgValues msg(sock.ip);
     vector<string> iplist;
@@ -50,8 +52,21 @@ pair<string, vector<string>> makeAndSendMessages(Socket &sock) {
         sock.send(buffers4, (sizeof(buffers4) / sizeof(buffers4[0])) - 1, 0);
         iplist = sock.recvIp();
     }
+    ReturnData data(iplist, sock.ip, version);
+    return data;
+}
 
-    return std::make_pair(version, iplist);
+// Optional asynchronous function
+void concurrentExecution(IpData ipd, promise<ReturnData> prms) {
+    cout << "___________________initiating ip: " << ipd.getIp() << endl;
+    try {
+        Socket sock(ipd.getIp().c_str());
+        sock.setup();                               // open socket
+        prms.set_value(makeAndSendMessages(sock));  // get data
+        sock.closeSocket();                         // close socket
+    } catch (...) {
+        prms.set_exception(std::current_exception());
+    }
 }
 
 int main(int argc, char *argv[]) {
@@ -104,36 +119,55 @@ int main(int argc, char *argv[]) {
 
     // In each iteration, try to get iplists from all addresses
     while (true) {
-        vector<IpData> ipdVec = ipdb.readToVec();
-        for (IpData &ipd : ipdVec) {
-            cout << "___________________initiating ip: " << ipd.getIp() << endl;
+        vector<IpData> ipdVec = ipdb.readToVec(10);
+        vector<std::future<ReturnData>> ftrvec;
+        vector<std::thread> workers;
+        vector<ReturnData> sv;
+
+        // Initiate threads
+        for (int i = 0; i != ipdVec.size(); ++i) {
+            promise<ReturnData> prms;  // make promise
+            ftrvec.push_back(std::move(prms.get_future()));
+            std::thread th(&concurrentExecution, ipdVec[i], std::move(prms));
+            workers.push_back(std::move(th));  // add thread to vector
+        }
+
+        // Wait for all threads to be done
+        for (auto &th : workers) {
+            th.join();
+        }
+
+        // check each thread for errors
+        for (auto &ftr : ftrvec) {
             try {
-                Socket sock(ipd.getIp().c_str());
-                sock.setup();
-                pair<string, vector<string>> data = makeAndSendMessages(sock);
-                vector<string> iplist = data.second;
-                // put captured ip addresses into database
-                for (string ip : iplist) {
-                    string input = ipdb.get(ip);
-                    IpData ipd(ip, input);
-                    ipdb.put(ipd);
-                }
-
-                // Save in database that reading is finished
-                cout << "____________Finished_reading: " << ipd.getIp() << endl;
-                ipd.setVersion(data.first);
-                ipd.setStatus("finished");
-                ipdb.put(ipd);
-
-                // Close socket
-                sock.closeSocket();
+                sv.push_back(std::move(ftr.get()));
             } catch (networkError &e) {
+                string input = ipdb.get(e.getIp());
+                IpData ipd(e.getIp(), input);
                 ipd.setStatus(e.getMsg());
                 ipdb.put(ipd);
                 e.printError();
             } catch (std::runtime_error &e) {
                 e.what();
             }
+        }
+
+        // For each thread
+        for (auto data : sv) {
+            // put captured ip addresses into database
+            for (string ip : data.iplist) {
+                string input = ipdb.get(ip);
+                IpData ipd(ip, input);
+                ipdb.put(ipd);
+                cout << "put complete" << endl;
+            }
+            // Save in database that reading is finished
+            cout << "_______Finished_reading: " << data.ip << endl;
+            string input = ipdb.get(data.ip);
+            IpData ipd(data.ip, input);
+            ipd.setVersion(data.version);
+            ipd.setStatus("finished");
+            ipdb.put(ipd);
         }
     }
 

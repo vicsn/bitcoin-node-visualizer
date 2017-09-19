@@ -52,6 +52,4 @@ class Socket {
     int start;
 };
 
-void recvT(Socket &sock, DB *ipdb);
-
 #endif

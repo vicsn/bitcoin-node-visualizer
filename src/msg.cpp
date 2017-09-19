@@ -70,7 +70,6 @@ pair<vector<string>, vector<string>> getAddrsFromString(string &str) {
 
     // size_t because pos will be compared to string::npos
     if (str.find("616464720000") != string::npos) {
-        cout << "addrs: " << str << endl;
         // Note: only lowercase
         const std::regex r4("ffff{1}[a-z0-9]{8}(208d){1}");
         const std::regex r6(

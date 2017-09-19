@@ -34,7 +34,7 @@ class DB {
     }
 
     // Declarations
-    std::vector<IpData> readToVec();
+    std::vector<IpData> readToVec(int readlimit);
     void init();
     void refresh();
     void view();

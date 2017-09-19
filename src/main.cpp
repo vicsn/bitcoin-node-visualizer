@@ -159,7 +159,6 @@ int main(int argc, char *argv[]) {
                 string input = ipdb.get(ip);
                 IpData ipd(ip, input);
                 ipdb.put(ipd);
-                cout << "put complete" << endl;
             }
             // Save in database that reading is finished
             cout << "_______Finished_reading: " << data.ip << endl;

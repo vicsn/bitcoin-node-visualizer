@@ -18,13 +18,13 @@ void Socket::setup() {
     if (connect(sockfd, res->ai_addr, res->ai_addrlen) < 0) {
         if (errno == EINPROGRESS) {
             do {
-                tv.tv_sec = 2;
+                tv.tv_sec = 5;  // timeout after 2 tv_sec seconds
                 tv.tv_usec = 0;
                 FD_ZERO(&myset);
                 FD_SET(sockfd, &myset);
                 int selectres = select(sockfd + 1, NULL, &myset, NULL, &tv);
                 if (selectres < 0 && errno != EINTR) {
-                    throw networkError(ip, "ErrorConn");
+                    throw networkError(ip, "ErrorConn1");
                 } else if (selectres > 0) {
                     // Socket selected for sending
                     lon = sizeof(int);
@@ -42,7 +42,7 @@ void Socket::setup() {
                 }
             } while (1);
         } else {
-            throw networkError(ip, "ErrorConn");
+            throw networkError(ip, "ErrorConn2");
         }
     }
     // Set to blocking mode again...
@@ -62,10 +62,10 @@ void Socket::setup() {
 void Socket::send(int buffers[], int len, int cut) {
     int i;
 
-    cout << endl << "sending through socket: ";
+    cout << ip << ": sending " << len << " through socket " << endl;
     for (i = 0; i != len; ++i) {
         if (::send(sockfd, (char *)&buffers[i], sizeof(buffers[i]), 0) >= 0) {
-            printf("%d ", i);
+            // printf("%d ", i);
         } else {
             throw networkError(ip, "ErrorSend");
         }
@@ -73,7 +73,7 @@ void Socket::send(int buffers[], int len, int cut) {
 
     // For the final send to work,the buffer length has to be shorter
     if (::send(sockfd, (char *)&buffers[i], sizeof(buffers[i]) - cut, 0) >= 0) {
-        printf("%d\n", i);
+        // printf("%d\n", i);
     } else {
         throw networkError(ip, "ErrorSend");
     }
@@ -117,7 +117,7 @@ vector<string> Socket::recvIp() {
     auto bufPtr = std::make_unique<char[]>(10000);
 
     // Read socket for 60 seconds, 10 iterations at a time
-    while (time(0) - start < 30) {
+    while (time(0) - start < 45) {
         for (int j = 0; j < 10; j++) {
             if (::recv(sockfd, bufPtr.get(), 10000, 0) > 0) {
                 string bufferAsStr(bufPtr.get(), 10000);

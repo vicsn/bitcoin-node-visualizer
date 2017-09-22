@@ -33,7 +33,8 @@ void DB::refresh() {
 }
 
 // Put fresh ip addresses in a vector
-vector<IpData> DB::readToVec(int readlimit) {
+vector<IpData> DB::readToVec() {
+    int limit = readlimit;
     vector<IpData> vec;
     leveldb::Iterator *it = ipdb->NewIterator(leveldb::ReadOptions());
     for (it->SeekToFirst(); it->Valid(); it->Next()) {
@@ -42,12 +43,12 @@ vector<IpData> DB::readToVec(int readlimit) {
             --skip;
             cout << "skipped" << endl;
         } else {
-            if (ipd.getStatus() == "fresh") {
+            if (ipd.getIp().size() > ipSize && ipd.getStatus() == status) {
                 vec.push_back(ipd);
-                --readlimit;
+                --limit;
             }
         }
-        if (readlimit == 0) {
+        if (limit == 0) {
             return vec;
         }
     }
@@ -60,7 +61,7 @@ void DB::view() {
     leveldb::Iterator *it = ipdb->NewIterator(leveldb::ReadOptions());
     for (it->SeekToFirst(); it->Valid(); it->Next()) {
         IpData ipd(it->value());  // Initialize ipd from slice
-        if (ipd.getStatus() == "finished") {
+        if (ipd.getIp().size() > ipSize && ipd.getStatus() == status) {
             cout << ++i << ":\t" << ipd.toString() << endl;
         }
         ++j;
@@ -97,8 +98,8 @@ void DB::collect() {
     cout << endl;
 }
 
-// Find the size of the database by iteratoring over all keys. Note that there
-// is no built-in function which provide this
+// Find the size of the database by iteratoring over all keys. Note that
+// there is no built-in function which provide this
 int DB::size() {
     int i = 0;
     leveldb::Iterator *it = ipdb->NewIterator(leveldb::ReadOptions());

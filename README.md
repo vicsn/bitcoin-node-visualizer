@@ -1,5 +1,5 @@
 
-nodeviz – A fast and small Bitcoin node vizualition tool
+nodeviz – A fast and small Bitcoin node visualition tool
 =============================================================
 
 <img src="https://github.com/victorsintnicolaas/bitcoin-node-visualizer/blob/master/Example.jpg?raw=true" width="550">

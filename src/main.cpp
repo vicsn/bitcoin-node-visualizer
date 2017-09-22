@@ -46,7 +46,6 @@ ReturnData makeAndSendMessages(Socket &sock) {
     // If Verack message is received, send other messages
     string version = sock.recvVerack();
     if (!version.empty()) {
-        // boost::thread recvThread(recvT, sock, ipdb);
         sock.send(buffers2, (sizeof(buffers2) / sizeof(buffers2[0])) - 1, 0);
         sock.send(buffers3, (sizeof(buffers3) / sizeof(buffers3[0])) - 1, 0);
         sock.send(buffers4, (sizeof(buffers4) / sizeof(buffers4[0])) - 1, 0);
@@ -75,8 +74,12 @@ int main(int argc, char *argv[]) {
     cxxopts::Options options(argv[0], "Bitcoin Node Visualizer");
     options.add_options()("help", "Print help")("repair", "Repair leveldb")(
         "init", "Init leveldb")("refresh", "Refresh leveldb")(
-        "view", "View entries")("collectip", "Collect ip addresses")(
-        "remove", "Remove entry", cxxopts::value<string>())(
+        "view", "View entries")("version", "Set ip version",
+                                cxxopts::value<string>())(
+        "status", "Set status ", cxxopts::value<string>())(
+        "collectip", "Collect ip addresses")("remove", "Remove entry",
+                                             cxxopts::value<string>())(
+        "add", "Add fresh entry", cxxopts::value<string>())(
         "skip", "Skip entries and continue search", cxxopts::value<int>());
 
     options.parse(argc, argv);
@@ -93,6 +96,20 @@ int main(int argc, char *argv[]) {
         if (!s.ok()) {
             cout << s.ToString() << endl;
         }
+    }
+
+    if (options.count("version")) {
+        auto &version = options["version"].as<string>();
+        if (version == "ipv6") {
+            ipdb.setVersion(16);
+        } else {
+            ipdb.setVersion(1);
+        }
+    }
+
+    if (options.count("status")) {
+        auto &status = options["status"].as<string>();
+        ipdb.setStatus(status);
     }
 
     if (options.count("init")) {
@@ -112,6 +129,11 @@ int main(int argc, char *argv[]) {
         Status s = ipdb.deleteKey(key);
         cout << s.ToString() << endl;
         exit(0);
+    } else if (options.count("add")) {
+        auto &key = options["add"].as<string>();
+        Status s = ipdb.putKey(key);
+        cout << s.ToString() << endl;
+        exit(0);
     } else if (options.count("skip")) {
         auto &skip = options["skip"].as<int>();
         ipdb.setSkip(skip);
@@ -119,7 +141,7 @@ int main(int argc, char *argv[]) {
 
     // In each iteration, try to get iplists from all addresses
     while (true) {
-        vector<IpData> ipdVec = ipdb.readToVec(10);
+        vector<IpData> ipdVec = ipdb.readToVec();
         vector<std::future<ReturnData>> ftrvec;
         vector<std::thread> workers;
         vector<ReturnData> sv;

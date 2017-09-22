@@ -10,7 +10,9 @@ using leveldb::Status;
 
 class DB {
    public:
-    DB(string path) : skip(), path(path) { options.create_if_missing = true; }
+    DB(string path) : skip(), path(path), readlimit(20) {
+        options.create_if_missing = true;
+    }
     ~DB() { delete ipdb; }  // TODO is this the correct destructor?
 
     // Definitions
@@ -19,7 +21,15 @@ class DB {
     Status deleteKey(string key) {
         return ipdb->Delete(leveldb::WriteOptions(), key);
     }
+    Status putKey(string key) {
+        IpData ipd(key, "");
+        return ipdb->Put(leveldb::WriteOptions(), ipd.getIp(),
+                         ipd.serializeAsStr());
+    }
     void setSkip(int newskip) { skip = newskip; }
+    // TODO improve naming
+    void setStatus(string newStatus) { status = newStatus; }
+    void setVersion(int versionSize) { ipSize = versionSize; }
     void put(IpData &ipd) {
         Status s = ipdb->Put(leveldb::WriteOptions(), ipd.getIp(),
                              ipd.serializeAsStr());  // TODO take out of class
@@ -34,7 +44,7 @@ class DB {
     }
 
     // Declarations
-    std::vector<IpData> readToVec(int readlimit);
+    std::vector<IpData> readToVec();
     void init();
     void refresh();
     void view();
@@ -43,6 +53,9 @@ class DB {
 
    private:
     int skip;
+    int readlimit;
+    string status;
+    int ipSize;
     const string path;
     leveldb::Options options;
     leveldb::DB *ipdb;

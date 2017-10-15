@@ -20,8 +20,12 @@ nodeviz – A fast and small Bitcoin node visualition tool
 	make all
 
 ##### get ip addresses
-	./nodeviz --init
-	./nodeviz
+	./nodeviz --init $ARGS
+	./nodeviz 		 $ARGS
 
 ##### get longitude and latitude
-	./nodeviz --collectip
+	./nodeviz --collectip $ARGS
+
+##### $ARGS
+	--version ipv6, ipv4
+	--status finished, ErrorConn1, ErrorConn2, ErrorGetSO, ErrorDelay, Timeout, ErrorSend 

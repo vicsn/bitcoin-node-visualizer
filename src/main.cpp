@@ -74,8 +74,8 @@ int main(int argc, char *argv[]) {
     cxxopts::Options options(argv[0], "Bitcoin Node Visualizer");
     options.add_options()("help", "Print help")("repair", "Repair leveldb")(
         "init", "Init leveldb")("refresh", "Refresh leveldb")(
-        "view", "View entries")("version", "Set ip version",
-                                cxxopts::value<string>())(
+        "view", "View entries")("formatipv6", "format ipv6 addresses")(
+        "version", "Set ip version", cxxopts::value<string>())(
         "status", "Set status ", cxxopts::value<string>())(
         "collectip", "Collect ip addresses")("remove", "Remove entry",
                                              cxxopts::value<string>())(
@@ -98,6 +98,7 @@ int main(int argc, char *argv[]) {
         }
     }
 
+    // Look for ipv6 or any ip type
     if (options.count("version")) {
         auto &version = options["version"].as<string>();
         if (version == "ipv6") {
@@ -107,6 +108,7 @@ int main(int argc, char *argv[]) {
         }
     }
 
+    // Look for a specific status
     if (options.count("status")) {
         auto &status = options["status"].as<string>();
         ipdb.setStatus(status);
@@ -117,6 +119,9 @@ int main(int argc, char *argv[]) {
         exit(0);
     } else if (options.count("refresh")) {
         ipdb.refresh();
+        exit(0);
+    } else if (options.count("formatipv6")) {
+        ipdb.formatipv6();
         exit(0);
     } else if (options.count("view")) {
         ipdb.view();

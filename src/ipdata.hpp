@@ -6,14 +6,15 @@
 
 class IpData {
    public:
-    // IpData(string ip, string lon, string lat, string stat, string version)
-    //     : ip(ip), lon(lon), lat(lat), status(stat), version(version) {}
     IpData(leveldb::Slice s) : ip(), lon(), lat(), status(), version() {
         deserializeAsStr(s.ToString());
     }
     IpData(string ip, string input) : ip(ip), status("fresh") {
         if (input.size() > 1) deserializeAsStr(input);
     }
+    // Constructor useful for testing purposes
+    IpData(string ip, string lon, string lat, string stat, string version)
+        : ip(ip), lon(lon), lat(lat), status(stat), version(version) {}
 
     // Definitions
     string toString() {
@@ -27,13 +28,14 @@ class IpData {
     }
 
     string getIp() { return ip; }
-    string getLon() { return lat; }
-    string getLat() { return lon; }
+    string getLon() { return lon; }
+    string getLat() { return lat; }
     string getStatus() { return status; }
-    string getVersion() { return status; }
+    string getVersion() { return version; }
     size_t getSize() { return (ip + lon + lat + status + version).size(); }
-    void setLon(const string &lon) { this->lon = lon; }
-    void setLat(const string &lat) { this->lat = lat; }
+    void setIp(string ip) { this->ip = ip; }
+    void setLon(const string &lont) { this->lon = lont; }
+    void setLat(const string &latt) { this->lat = latt; }
     void setStatus(const string &status) { this->status = status; }
     void setVersion(const string &version) { this->version = version; }
 

@@ -26,14 +26,11 @@ class DB {
         return ipdb->Put(leveldb::WriteOptions(), ipd.getIp(),
                          ipd.serializeAsStr());
     }
-    void setSkip(int newskip) { skip = newskip; }
-    // TODO improve naming
-    void setStatus(string newStatus) { status = newStatus; }
+    void formatipv6();
+    void setSkip(int skip) { this->skip = skip; }
+    void setStatus(string status) { this->status = status; }
     void setVersion(int versionSize) { ipSize = versionSize; }
-    void put(IpData &ipd) {
-        Status s = ipdb->Put(leveldb::WriteOptions(), ipd.getIp(),
-                             ipd.serializeAsStr());  // TODO take out of class
-    }
+    void put(IpData &ipd) { put(ipd.getIp(), ipd.serializeAsStr()); }
     void put(string key, string value) {
         Status s = ipdb->Put(leveldb::WriteOptions(), key, value);
     }

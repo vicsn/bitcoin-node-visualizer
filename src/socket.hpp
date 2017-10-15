@@ -18,7 +18,7 @@ class Socket {
    public:
     Socket(const char ip[]) : ip(ip) {
         memset(&hints, 0, sizeof hints);  // make sure the struct is empty
-        hints.ai_family = AF_INET6;       // don't care IPv4 or IPv6
+        hints.ai_family = AF_UNSPEC;      // AF_UNSPEC/AF_INET6 either or IPv6
         hints.ai_socktype = SOCK_STREAM;  // TCP stream sockets
         status = getaddrinfo(ip, "8333", &hints, &res);
         if (status != 0) throw networkError(ip, "ErrorGetad");

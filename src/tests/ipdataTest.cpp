@@ -3,73 +3,73 @@
 
 TEST_CASE("IpData", "[ipdb]") {
     GIVEN("An empty IpData object") {
-        IpData ipdb("ip", "lat", "lon", "stat");
+        IpData ipd("ip", "lon", "lat", "stat", "vers");
         int expectedsize;
         string expectedstring;
         WHEN("The ip is retrieved") {
             expectedstring = "ip";
-            string ip = ipdb.getIp();
+            string ip = ipd.getIp();
             THEN("The retrieved equals expected ip") {
                 REQUIRE(ip == expectedstring);
             };
         }
         WHEN("The lat is retrieved") {
             expectedstring = "lat";
-            string lat = ipdb.getLat();
+            string lat = ipd.getLat();
             THEN("The retrieved equals expected lat") {
                 REQUIRE(lat == expectedstring);
             };
         }
         WHEN("The lon is retrieved") {
             expectedstring = "lon";
-            string lon = ipdb.getLon();
+            string lon = ipd.getLon();
             THEN("The retrieved equals expected lon") {
                 REQUIRE(lon == expectedstring);
             };
         }
         WHEN("The status is retrieved") {
             expectedstring = "stat";
-            string status = ipdb.getStatus();
+            string status = ipd.getStatus();
             THEN("The retrieved equals expected status") {
                 REQUIRE(status == expectedstring);
             };
         }
         WHEN("The size is retrieved") {
-            expectedsize = 12;
-            int size = ipdb.getSize();
+            expectedsize = 16;
+            int size = ipd.getSize();
             THEN("The retrieved equals expected size") {
                 REQUIRE(size == expectedsize);
             };
         }
         WHEN("The lat is set") {
             expectedstring = "latje";
-            ipdb.setLat("latje");
+            ipd.setLat("latje");
             THEN("The set equals expected lat") {
-                REQUIRE(ipdb.getLat() == expectedstring);
+                REQUIRE(ipd.getLat() == expectedstring);
             };
         }
         WHEN("The lon is set") {
             expectedstring = "lontje";
-            ipdb.setLon("lontje");
+            ipd.setLon("lontje");
             THEN("The set equals expected lon") {
-                REQUIRE(ipdb.getLon() == expectedstring);
+                REQUIRE(ipd.getLon() == expectedstring);
             };
         }
         WHEN("The status is set") {
             expectedstring = "statusje";
-            ipdb.setStatus("statusje");
+            ipd.setStatus("statusje");
             THEN("The set equals expected status") {
-                REQUIRE(ipdb.getStatus() == expectedstring);
+                REQUIRE(ipd.getStatus() == expectedstring);
             };
         }
         WHEN("The content is serialized") {
-            string serial = ipdb.serializeAsStr();
+            string serial = ipd.serializeAsStr();
             THEN("A new object can be created") {
-                IpData ipdb2(serial);
-                REQUIRE(ipdb2.getIp() == ipdb.getIp());
-                REQUIRE(ipdb2.getLat() == ipdb.getLat() + "000000");
-                REQUIRE(ipdb2.getLon() == ipdb.getLon() + "000000");
-                REQUIRE(ipdb2.getStatus() == ipdb.getStatus());
+                IpData ipd2(serial);
+                REQUIRE(ipd2.getIp() == ipd.getIp());
+                REQUIRE(ipd2.getLat() == ipd.getLat() + "00000");
+                REQUIRE(ipd2.getLon() == ipd.getLon() + "000000");
+                REQUIRE(ipd2.getStatus() == ipd.getStatus());
             };
         }
     }

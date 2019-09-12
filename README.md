@@ -1,8 +1,12 @@
 
-nodeviz – A fast and small Bitcoin node visualition tool
+nodeviz – A small Bitcoin node visualition tool
 =============================================================
 
-<img src="https://github.com/victorsintnicolaas/bitcoin-node-visualizer/blob/master/Example.jpg?raw=true" width="550">
+<img src="https://github.com/vicsn/bitcoin-node-visualizer/blob/master/Example.jpg?raw=true" width="550">
+
+[Dependencies](#dependencies)
+[Building steps](#building-steps)
+
 
 ##### Dependencies:
 	curl
